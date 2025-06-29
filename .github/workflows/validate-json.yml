@@ -1,0 +1,26 @@
+name: Validate JSON files
+
+on:
+  pull_request:
+    paths:
+      - 'domains/**/*.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: |
+          for file in domains/*.json; do
+            jq empty "$file"
+          done
+
+      - name: Check for NS records (informational)
+        run: |
+          for file in domains/*.json; do
+            if jq -e '.records.NS' "$file" > /dev/null; then
+              echo "⚠️ Warning: NS records detected in $file but will be ignored during DNS setup."
+            fi
+          done
